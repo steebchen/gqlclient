@@ -2,9 +2,9 @@ package gqlclient
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 )
 
 type rawJsonError struct {
@@ -23,7 +23,7 @@ func unpack(data interface{}, dest interface{}) error {
 		ZeroFields:  true,
 	})
 	if err != nil {
-		return fmt.Errorf("mapstructure: %s", err.Error())
+		return errors.Wrap(err, "mapstructure")
 	}
 
 	err = d.Decode(data)

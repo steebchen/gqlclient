@@ -3,9 +3,10 @@ package gqlclient
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type Request struct {
@@ -25,7 +26,9 @@ func (c *GQLClient) MustSend(dest interface{}, query string, variables map[strin
 }
 
 type Error struct {
-	Message string
+	Message    string
+	Path       []string
+	Extensions map[string]interface{}
 }
 
 type ResponseData struct {
@@ -35,22 +38,22 @@ type ResponseData struct {
 }
 
 func (c *GQLClient) Send(dest interface{}, query string, variables map[string]interface{}) (*ResponseData, error) {
-	resp, err := c.RawSend(query, variables)
+	resp, err := c.Raw(query, variables)
 	if err != nil {
 		return resp, err
 	}
 
-	// we want to unpack even if there is an error, so we can see partial responses
-	unpackErr := unpack(resp.Data, dest)
-
 	if resp.Errors != nil {
-		return resp, &rawJsonError{}
+		return resp, nil
 	}
+
+	// unpack even if there is an error so we can see partial responses
+	unpackErr := unpack(resp.Data, dest)
 
 	return resp, unpackErr
 }
 
-func (c *GQLClient) RawSend(query string, variables map[string]interface{}) (*ResponseData, error) {
+func (c *GQLClient) Raw(query string, variables map[string]interface{}) (*ResponseData, error) {
 	req := &Request{
 		Query:     query,
 		Variables: variables,
@@ -58,12 +61,12 @@ func (c *GQLClient) RawSend(query string, variables map[string]interface{}) (*Re
 
 	requestBody, err := json.Marshal(req)
 	if err != nil {
-		return nil, fmt.Errorf("encode: %s", err.Error())
+		return nil, errors.Wrap(err, "raw encode")
 	}
 
 	rawResponse, err := c.http.Post(c.url, "application/json", bytes.NewBuffer(requestBody))
 	if err != nil {
-		return nil, fmt.Errorf("post: %s", err.Error())
+		return nil, errors.Wrap(err, "raw post")
 	}
 	defer func() {
 		_ = rawResponse.Body.Close()
@@ -72,11 +75,11 @@ func (c *GQLClient) RawSend(query string, variables map[string]interface{}) (*Re
 	responseBody, err := ioutil.ReadAll(rawResponse.Body)
 
 	if err != nil {
-		return nil, fmt.Errorf("read: %s", err.Error())
+		return nil, errors.Wrap(err, "raw read")
 	}
 
 	if rawResponse.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http %d: %s", rawResponse.StatusCode, responseBody)
+		return nil, errors.Errorf("http status code %d with response %s", rawResponse.StatusCode, responseBody)
 	}
 
 	// decode it into map string first, let mapstructure do the final decode
@@ -84,7 +87,7 @@ func (c *GQLClient) RawSend(query string, variables map[string]interface{}) (*Re
 	respDataRaw := &ResponseData{}
 	err = json.Unmarshal(responseBody, &respDataRaw)
 	if err != nil {
-		return nil, fmt.Errorf("decode: %s", err.Error())
+		return nil, errors.Wrap(err, "raw decode")
 	}
 
 	return respDataRaw, nil
