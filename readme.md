@@ -1,6 +1,8 @@
 # gqlclient [![GoDoc](https://godoc.org/github.com/steebchen/gqlclient?status.png)](http://godoc.org/github.com/steebchen/gqlclient)
 
-Package gqlclient provides a GraphQL client implementation.
+The package gqlclient provides a GraphQL client implementation.
+
+![./gopher.svg](https://github.com/MariaLetta/free-gophers-pack)
 
 - Simple, familiar API
 - Use strong Go types for response and variables
