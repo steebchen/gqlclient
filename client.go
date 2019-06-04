@@ -7,14 +7,9 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-)
 
-// Request is the payload for GraphQL queries
-type Request struct {
-	Query         string                 `json:"query"`
-	Variables     map[string]interface{} `json:"variables,omitempty"`
-	OperationName string                 `json:"operationName,omitempty"`
-}
+	"github.com/steebchen/gqlclient/structs"
+)
 
 // Error is a GraphQL Error
 type Error struct {
@@ -30,20 +25,21 @@ type Response struct {
 	Extensions map[string]interface{}
 }
 
-// MustSend is the same as Send, but panics if an error occurs
-func (c *Instance) MustSend(dest interface{}, query string, variables map[string]interface{}) *Response {
-	data, err := c.Send(dest, query, variables)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return data
+// request is the payload for GraphQL queries
+type request struct {
+	Query         string                 `json:"query"`
+	Variables     map[string]interface{} `json:"variables,omitempty"`
+	OperationName string                 `json:"operationName,omitempty"`
 }
 
-// Send a GraphQL request and unmarshal it to dest
-func (c *Instance) Send(dest interface{}, query string, variables map[string]interface{}) (*Response, error) {
-	resp, err := c.Raw(query, variables)
+// Send a GraphQL request to struct or map
+func (c *Client) Send(dest interface{}, query string, variables interface{}) (*Response, error) {
+	unboxedVars, err := structs.StructToMap(variables)
+	if err != nil {
+		return nil, errors.Wrap(err, "StructsToMap failed")
+	}
+
+	resp, err := c.Raw(query, unboxedVars)
 	if err != nil {
 		return nil, err
 	}
@@ -53,14 +49,17 @@ func (c *Instance) Send(dest interface{}, query string, variables map[string]int
 	}
 
 	// unpack even if there is an error so we can see partial responses
-	unpackErr := unpack(resp.Data, dest)
+	unpackErr := structs.Unpack(resp.Data, dest)
 
 	return resp, unpackErr
 }
 
-// Raw sends a basic GraphQL request with generic types
-func (c *Instance) Raw(query string, variables map[string]interface{}) (*Response, error) {
-	req := &Request{
+// Raw sends a basic GraphQL request without any struct types.
+// Parameter `variables` can be either a map or a struct
+func (c *Client) Raw(query string, variables map[string]interface{}) (*Response, error) {
+	var err error
+
+	req := &request{
 		Query:     query,
 		Variables: variables,
 	}

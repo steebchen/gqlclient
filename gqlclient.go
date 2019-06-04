@@ -5,15 +5,15 @@ import (
 	"net/http"
 )
 
-// Instance is gqlclient struct returned with New()
-type Instance struct {
+// Client is the GraphQL client which is returned by New()
+type Client struct {
 	url  string
 	http *http.Client
 }
 
 // New creates a graphql http
-func New(url string) *Instance {
-	c := &Instance{
+func New(url string) *Client {
+	c := &Client{
 		url:  url,
 		http: http.DefaultClient,
 	}
@@ -22,7 +22,7 @@ func New(url string) *Instance {
 }
 
 // WithHTTPClient uses a given http client for all requests
-func (c *Instance) WithHTTPClient(client *http.Client) *Instance {
+func (c *Client) WithHTTPClient(client *http.Client) *Client {
 	c.http = client
 	return c
 }

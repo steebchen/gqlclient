@@ -11,7 +11,7 @@ categories:
     labels:
       - documentation
   - title: 🧰 Maintenance
-    label:
+    labels:
       - ci
       - chore
 template: |
