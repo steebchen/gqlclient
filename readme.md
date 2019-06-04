@@ -63,5 +63,3 @@ func main() {
 	log.Printf("data: %+v", data)
 }
 ```
-
-You can try it live on the [▶ Go playground](https://play.golang.org/p/A6f_ez1oKxV). 
