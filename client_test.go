@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestClient(t *testing.T) {
-	h := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func mockServer(t *testing.T) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		b, err := ioutil.ReadAll(r.Body)
 
 		if err != nil {
@@ -32,20 +32,118 @@ func TestClient(t *testing.T) {
 			panic(err)
 		}
 	}))
+}
 
-	client := New(h.URL).WithHTTPClient(http.DefaultClient)
-
-	var data struct {
-		ID   string
-		Name string
+func TestClient_Send(t *testing.T) {
+	query := `query GetUser { user(id: $id) { id name } }`
+	variables := map[string]interface{}{
+		"id": "1",
 	}
 
-	resp, err := client.Send(&data, `query GetUser { user(id: $id) { id name } }`, map[string]interface{}{
-		"id": "1",
+	t.Run("struct dest", func(t *testing.T) {
+		type structType struct {
+			ID   string
+			Name string
+		}
+		var structDest structType
+
+		instance := New(mockServer(t).URL)
+
+		_, err := instance.Send(&structDest, query, variables)
+
+		require.NoError(t, err)
+		require.Equal(t, structType{
+			ID:   "1",
+			Name: "bob",
+		}, structDest)
 	})
 
-	require.NoError(t, err)
+	t.Run("map dest", func(t *testing.T) {
+		var mapDest map[string]interface{}
 
-	require.Equal(t, []Error(nil), resp.Errors)
-	require.Equal(t, "bob", data.Name)
+		instance := New(mockServer(t).URL)
+
+		_, err := instance.Send(&mapDest, query, variables)
+
+		require.NoError(t, err)
+		require.Equal(t, map[string]interface{}{
+			"id":   "1",
+			"name": "bob",
+		}, mapDest)
+	})
+}
+
+func TestClient_Send_Variations(t *testing.T) {
+	query := `query GetUser { user(id: $id) { id name } }`
+
+	type args struct {
+		query     string
+		variables interface{}
+	}
+
+	tests := []struct {
+		name     string
+		instance *Client
+		args     *args
+		want     *Response
+		wantErr  bool
+	}{
+		{
+			name: "map variables",
+			args: &args{
+				query: query,
+				variables: map[string]interface{}{
+					"id": "1",
+				},
+			},
+			want: &Response{
+				Data: map[string]interface{}{
+					"id":   "1",
+					"name": "bob",
+				},
+			},
+		},
+		{
+			name: "struct variables",
+			args: &args{
+				query: query,
+				variables: struct {
+					ID string `json:"id"`
+				}{
+					ID: "1",
+				},
+			},
+			want: &Response{
+				Data: map[string]interface{}{
+					"id":   "1",
+					"name": "bob",
+				},
+			},
+		},
+		{
+			name: "disallow non-object type",
+			args: &args{
+				query:     query,
+				variables: "nope",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			instance := New(mockServer(t).URL)
+			var dest map[string]interface{}
+			got, err := instance.Send(&dest, tt.args.query, tt.args.variables)
+
+			if !tt.wantErr {
+				require.NoError(t, err)
+			}
+
+			if tt.wantErr && err == nil {
+				t.Fatalf("want err but got nil. result: %+v", got)
+			}
+
+			require.Equal(t, tt.want, got)
+		})
+	}
 }
