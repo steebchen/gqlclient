@@ -29,20 +29,21 @@ $ go get github.com/steebchen/gqlclient
 package main
 
 import (
+	"log"
 	"github.com/steebchen/gqlclient"
 )
 
 func main() {
 	client := gqlclient.New("https://metaphysics-production.artsy.net")
 	
-	var resp struct {
+	var data struct {
 		Article struct {
-			ID    string
+			ID  string
 			Title string
 		}
 	}
 	
-	_, err := client.Send(&resp, `
+	_, err := client.Send(&data, `
 		query Article($id: String!) {
 			article(id: $id) {
 				id
@@ -52,5 +53,13 @@ func main() {
 	`, map[string]interface{}{
 		"id": "55bfed9275de7b060098b9bc",
 	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("data: %+v", data)
 }
 ```
+
+You can try it live on the [▶ Go playground](https://play.golang.org/p/A6f_ez1oKxV). 

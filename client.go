@@ -40,7 +40,7 @@ type ResponseData struct {
 func (c *GQLClient) Send(dest interface{}, query string, variables map[string]interface{}) (*ResponseData, error) {
 	resp, err := c.Raw(query, variables)
 	if err != nil {
-		return resp, err
+		return nil, err
 	}
 
 	if resp.Errors != nil {
