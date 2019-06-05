@@ -88,10 +88,8 @@ func main() {
 If you don't want to use structs, you use `Raw()` to use maps for both input (variables) and output (response data).
 
 ```go
-client := gqlclient.New("https://metaphysics-production.artsy.net")
-
-resp, err := client.Send(&data, query, map[string]interface{}{
-	ID: "55bfed9275de7b060098b9bc",
+resp, err := client.Raw(query, map[string]interface{}{
+  "id": "55bfed9275de7b060098b9bc",
 })
 
 if err != nil {
