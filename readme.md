@@ -99,9 +99,9 @@ if err != nil {
 log.Printf("data: %+v", resp.Data)
 // Output:
 // data: map[
-//   article:map[
-//	 id:55bfed9275de7b060098b9bc
-//	 title:How the 1960s’ Most Iconic Artists Made Art Contemporary
+//   article: map[
+//	   id: 55bfed9275de7b060098b9bc
+//	   title: How the 1960s’ Most Iconic Artists Made Art Contemporary
 //   ]
 // ]
 ```
