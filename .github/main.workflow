@@ -26,5 +26,5 @@ workflow "go test all" {
 action "go test" {
   uses = "docker://docker.io/golang:1.12"
   runs = "go"
-  args = "test ./..."
+  args = "test -v ./..."
 }

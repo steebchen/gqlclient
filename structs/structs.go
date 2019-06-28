@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Unpack a map `origin` to a struct. `dest` must be a pointer to a struct.
+// Unpack a map `origin` to a struct `dest`. `dest` must be a pointer to a struct.
 func Unpack(origin interface{}, dest interface{}) error {
 	d, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result:      dest,
