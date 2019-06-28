@@ -3,6 +3,7 @@ package gqlclient
 
 import (
 	"net/http"
+	"time"
 )
 
 // Client is the GraphQL client which is returned by New()
@@ -14,8 +15,10 @@ type Client struct {
 // New creates a graphql http
 func New(url string) *Client {
 	c := &Client{
-		url:  url,
-		http: http.DefaultClient,
+		url: url,
+		http: &http.Client{
+			Timeout: 30 * time.Second,
+		},
 	}
 
 	return c
