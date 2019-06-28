@@ -12,16 +12,17 @@ Reasons to use gqlclient:
 
 - Simple, familiar API
 - Use strong Go types for variables and response data
-- Simple error handling
+- Receive a full GraphQL response with data, errors and extensions
+- Respects `context.Context` cancellations and timeouts
 - Supports GraphQL Errors with Extensions
 
-*Note*: This package already works quite well, but it is under heavy development to work towards a v1.0 release. Before that, the API may have breaking changes even with minor versions. 
+*Note*: This package already works quite well, but it is under heavy development to work towards a v1.0 release. Before that, the API may have breaking changes even with minor versions.
 
 Coming soon:
 
 - Uploads
 - Subscriptions
-- More options (http headers, request context)
+- More options (e.g. http headers)
 
 ## Installation
 
@@ -42,6 +43,7 @@ package main
 
 import (
 	"log"
+	"context"
 	"github.com/steebchen/gqlclient"
 )
 
@@ -68,7 +70,7 @@ func main() {
 		}
 	`
 
-	_, err := client.Send(&data, query, variables{
+	_, err := client.Send(context.Background(), &data, query, variables{
 		ID: "55bfed9275de7b060098b9bc",
 	})
 
@@ -88,7 +90,7 @@ func main() {
 If you don't want to use structs, you use `Raw()` to use maps for both input (variables) and output (response data).
 
 ```go
-resp, err := client.Raw(query, map[string]interface{}{
+resp, err := client.Raw(context.Background(), query, map[string]interface{}{
   "id": "55bfed9275de7b060098b9bc",
 })
 
