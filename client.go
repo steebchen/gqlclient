@@ -36,7 +36,7 @@ type request struct {
 func (c *Client) Send(dest interface{}, query string, variables interface{}) (*Response, error) {
 	unboxedVars, err := structs.StructToMap(variables)
 	if err != nil {
-		return nil, errors.Wrap(err, "StructsToMap failed")
+		return nil, errors.Wrap(err, "StructToMap failed")
 	}
 
 	resp, err := c.Raw(query, unboxedVars)

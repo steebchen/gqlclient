@@ -1,20 +1,37 @@
 name-template: v$NEXT_PATCH_VERSION 🌈
+
 categories:
   - title: 🚀 Features
     labels:
-      - feature
-      - enhancement
+      - kind/feature
+      - kind/enhancement
+
   - title: 🐛 Bug Fixes
     labels:
-      - bug
+      - kind/bug
+
   - title: 🔖 Documentation
     labels:
-      - documentation
+      - kind/docs
+
+  - title: 💅 Style
+    labels:
+      - kind/style
+
+  - title: 🧪 Test suite
+    labels:
+      - kind/test
+
   - title: 🧰 Maintenance
     labels:
-      - ci
-      - chore
+      - kind/ci
+      - kind/chore
+
 template: |
   ## Changes
 
   $CHANGES
+
+  ## Contributors
+
+  $CONTRIBUTORS
