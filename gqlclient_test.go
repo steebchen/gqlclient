@@ -1,6 +1,7 @@
 package gqlclient
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -17,7 +18,7 @@ func TestNew(t *testing.T) {
 		Name string
 	}
 
-	resp, err := client.Send(&data, `query GetUser { user(id: $id) { id name } }`, map[string]interface{}{
+	resp, err := client.Send(context.Background(), &data, `query GetUser { user(id: $id) { id name } }`, map[string]interface{}{
 		"id": "1",
 	})
 
@@ -39,7 +40,7 @@ func TestClient_WithHTTPClient(t *testing.T) {
 		Name string
 	}
 
-	_, err := client.Send(&data, `query GetUser { user(id: $id) { id name } }`, map[string]interface{}{
+	_, err := client.Send(context.Background(), &data, `query GetUser { user(id: $id) { id name } }`, map[string]interface{}{
 		"id": "1",
 	})
 

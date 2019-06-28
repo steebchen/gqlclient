@@ -1,12 +1,16 @@
 package gqlclient
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,7 +53,7 @@ func TestClient_Send(t *testing.T) {
 
 		instance := New(mockServer(t).URL)
 
-		_, err := instance.Send(&structDest, query, variables)
+		_, err := instance.Send(context.Background(), &structDest, query, variables)
 
 		require.NoError(t, err)
 		require.Equal(t, structType{
@@ -63,7 +67,7 @@ func TestClient_Send(t *testing.T) {
 
 		instance := New(mockServer(t).URL)
 
-		_, err := instance.Send(&mapDest, query, variables)
+		_, err := instance.Send(context.Background(), &mapDest, query, variables)
 
 		require.NoError(t, err)
 		require.Equal(t, map[string]interface{}{
@@ -71,6 +75,21 @@ func TestClient_Send(t *testing.T) {
 			"name": "bob",
 		}, mapDest)
 	})
+}
+
+func TestClient_Send_context(t *testing.T) {
+	query := `query GetUser { user(id: $id) { id name } }`
+	variables := map[string]interface{}{
+		"id": "1",
+	}
+
+	instance := New(mockServer(t).URL)
+
+	ctx, _ := context.WithDeadline(context.Background(), time.Now())
+
+	_, err := instance.Raw(ctx, query, variables)
+
+	require.Equal(t, true, os.IsTimeout(errors.Cause(err)))
 }
 
 func TestClient_Send_Variations(t *testing.T) {
@@ -133,7 +152,7 @@ func TestClient_Send_Variations(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			instance := New(mockServer(t).URL)
 			var dest map[string]interface{}
-			got, err := instance.Send(&dest, tt.args.query, tt.args.variables)
+			got, err := instance.Send(context.Background(), &dest, tt.args.query, tt.args.variables)
 
 			if !tt.wantErr {
 				require.NoError(t, err)

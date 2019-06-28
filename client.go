@@ -2,6 +2,7 @@ package gqlclient
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -26,20 +27,20 @@ type Response struct {
 }
 
 // request is the payload for GraphQL queries
-type request struct {
+type gqlRequest struct {
 	Query         string                 `json:"query"`
 	Variables     map[string]interface{} `json:"variables,omitempty"`
 	OperationName string                 `json:"operationName,omitempty"`
 }
 
 // Send a GraphQL request to struct or map
-func (c *Client) Send(dest interface{}, query string, variables interface{}) (*Response, error) {
+func (c *Client) Send(ctx context.Context, dest interface{}, query string, variables interface{}) (*Response, error) {
 	unboxedVars, err := structs.StructToMap(variables)
 	if err != nil {
 		return nil, errors.Wrap(err, "StructToMap failed")
 	}
 
-	resp, err := c.Raw(query, unboxedVars)
+	resp, err := c.Raw(ctx, query, unboxedVars)
 	if err != nil {
 		return nil, err
 	}
@@ -56,20 +57,29 @@ func (c *Client) Send(dest interface{}, query string, variables interface{}) (*R
 
 // Raw sends a basic GraphQL request without any struct types.
 // Parameter `variables` can be either a map or a struct
-func (c *Client) Raw(query string, variables map[string]interface{}) (*Response, error) {
+func (c *Client) Raw(ctx context.Context, query string, variables map[string]interface{}) (*Response, error) {
 	var err error
 
-	req := &request{
+	payload := &gqlRequest{
 		Query:     query,
 		Variables: variables,
 	}
 
-	requestBody, err := json.Marshal(req)
+	requestBody, err := json.Marshal(payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "raw encode")
 	}
 
-	rawResponse, err := c.http.Post(c.url, "application/json", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("post", c.url, bytes.NewBuffer(requestBody))
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("content-type", "application/json")
+	req = req.WithContext(ctx)
+
+	rawResponse, err := c.http.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "raw post")
 	}
