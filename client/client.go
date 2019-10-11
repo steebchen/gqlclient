@@ -1,4 +1,4 @@
-package gqlclient
+package client
 
 import (
 	"bytes"
@@ -6,11 +6,36 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/steebchen/gqlclient/structs"
 )
+
+// New creates a new graphql client
+func New(url string) *Client {
+	c := &Client{
+		url: url,
+		http: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+
+	return c
+}
+
+// Client is the GraphQL client which is returned by New()
+type Client struct {
+	url  string
+	http *http.Client
+}
+
+// WithHTTPClient uses a given http client for all requests
+func (c *Client) WithHTTPClient(client *http.Client) *Client {
+	c.http = client
+	return c
+}
 
 // Error is a GraphQL Error
 type Error struct {
