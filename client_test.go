@@ -22,7 +22,7 @@ func mockServer(t *testing.T) *httptest.Server {
 			panic(err)
 		}
 
-		expect := `{"query":"query GetUser { user(id: $id) { id name } }","variables":{"id":"1"}}`
+		expect := `{"query":"query GetUser { user(id: $id) { id name } }","variables":{"id":"1"},"operationName":null}`
 		require.Equal(t, expect, string(b))
 
 		err = json.NewEncoder(w).Encode(map[string]interface{}{
