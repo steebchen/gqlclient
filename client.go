@@ -14,19 +14,19 @@ import (
 
 // Error is a GraphQL Error
 type Error struct {
-	Message    string
-	Path       []string
-	Extensions map[string]interface{}
+	Message    string                 `json:"message,omitempty"`
+	Path       []string               `json:"path,omitempty"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
 // Response is the payload for a GraphQL response
 type Response struct {
-	Data       interface{}
-	Errors     []Error
-	Extensions map[string]interface{}
+	Data       interface{}            `json:"data,omitempty"`
+	Errors     []Error                `json:"errors,omitempty"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
-// request is the payload for GraphQL queries
+// gqlRequest is the payload for GraphQL queries
 type gqlRequest struct {
 	Query         string                 `json:"query"`
 	Variables     map[string]interface{} `json:"variables"`
@@ -66,7 +66,7 @@ func (c *Client) Raw(ctx context.Context, query string, variables map[string]int
 	response := &Response{}
 	err := c.do(ctx, payload, variables, response)
 	if err != nil {
-		return nil, errors.Wrap(err, "raw decode")
+		return nil, errors.Wrap(err, "raw do")
 	}
 
 	return response, err
@@ -116,7 +116,7 @@ func (c *Client) do(ctx context.Context, payload gqlRequest, variables map[strin
 
 	// decode it into map string first, let mapstructure do the final decode
 	// mapstructure is way stricter about unknown fields, can handle embedded structs and more
-	err = json.Unmarshal(responseBody, &response)
+	err = json.Unmarshal(responseBody, response)
 	if err != nil {
 		return errors.Wrap(err, "raw decode")
 	}

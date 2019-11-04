@@ -190,3 +190,45 @@ func TestClient_Send_Variations(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_Errors(t *testing.T) {
+	query := `query GetUser { user(id: $id) { id name } }`
+
+	tests := []struct {
+		name         string
+		mockResponse map[string]interface{}
+		want         *Response
+	}{
+		{
+			name: "basic error",
+			mockResponse: map[string]interface{}{
+				"errors": []map[string]interface{}{{
+					"message": "error message",
+				}},
+			},
+			want: &Response{
+				Errors: []Error{{
+					Message: "error message",
+				}},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			expectQuery := `{"query":"` + query + `","variables":{"id":"1"},"operationName":null}`
+
+			srv := mockServer(t, expectQuery, tt.mockResponse)
+			instance := New(srv.URL)
+
+			var dest map[string]interface{}
+			got, err := instance.Send(context.Background(), &dest, query, map[string]interface{}{
+				"id": "1",
+			})
+
+			require.Equal(t, nil, err)
+
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
