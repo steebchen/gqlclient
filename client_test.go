@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func mockServer(t *testing.T) *httptest.Server {
+func mockServer(t *testing.T, expectQuery string, response map[string]interface{}) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		b, err := ioutil.ReadAll(r.Body)
 
@@ -22,15 +22,9 @@ func mockServer(t *testing.T) *httptest.Server {
 			panic(err)
 		}
 
-		expect := `{"query":"query GetUser { user(id: $id) { id name } }","variables":{"id":"1"},"operationName":null}`
-		require.Equal(t, expect, string(b))
+		require.Equal(t, expectQuery, string(b))
 
-		err = json.NewEncoder(w).Encode(map[string]interface{}{
-			"data": map[string]interface{}{
-				"id":   "1",
-				"name": "bob",
-			},
-		})
+		err = json.NewEncoder(w).Encode(response)
 
 		if err != nil {
 			panic(err)
@@ -43,6 +37,7 @@ func TestClient_Send(t *testing.T) {
 	variables := map[string]interface{}{
 		"id": "1",
 	}
+	expectQuery := `{"query":"` + query + `","variables":{"id":"1"},"operationName":null}`
 
 	t.Run("struct dest", func(t *testing.T) {
 		type structType struct {
@@ -51,11 +46,17 @@ func TestClient_Send(t *testing.T) {
 		}
 		var structDest structType
 
-		instance := New(mockServer(t).URL)
+		srv := mockServer(t, expectQuery, map[string]interface{}{
+			"data": map[string]interface{}{
+				"id":   "1",
+				"name": "bob",
+			},
+		})
+		instance := New(srv.URL)
 
 		_, err := instance.Send(context.Background(), &structDest, query, variables)
 
-		require.NoError(t, err)
+		require.Equal(t, nil, err)
 		require.Equal(t, structType{
 			ID:   "1",
 			Name: "bob",
@@ -65,11 +66,17 @@ func TestClient_Send(t *testing.T) {
 	t.Run("map dest", func(t *testing.T) {
 		var mapDest map[string]interface{}
 
-		instance := New(mockServer(t).URL)
+		srv := mockServer(t, expectQuery, map[string]interface{}{
+			"data": map[string]interface{}{
+				"id":   "1",
+				"name": "bob",
+			},
+		})
+		instance := New(srv.URL)
 
 		_, err := instance.Send(context.Background(), &mapDest, query, variables)
 
-		require.NoError(t, err)
+		require.Equal(t, nil, err)
 		require.Equal(t, map[string]interface{}{
 			"id":   "1",
 			"name": "bob",
@@ -82,8 +89,15 @@ func TestClient_Send_context(t *testing.T) {
 	variables := map[string]interface{}{
 		"id": "1",
 	}
+	expectQuery := `{"query":"` + query + `","variables":{"id":"1"},"operationName":null}`
 
-	instance := New(mockServer(t).URL)
+	srv := mockServer(t, expectQuery, map[string]interface{}{
+		"data": map[string]interface{}{
+			"id":   "1",
+			"name": "bob",
+		},
+	})
+	instance := New(srv.URL)
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now())
 	defer cancel()
@@ -102,11 +116,10 @@ func TestClient_Send_Variations(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		instance *Client
-		args     *args
-		want     *Response
-		wantErr  bool
+		name    string
+		args    *args
+		want    *Response
+		wantErr bool
 	}{
 		{
 			name: "map variables",
@@ -152,12 +165,21 @@ func TestClient_Send_Variations(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			instance := New(mockServer(t).URL)
+			expectQuery := `{"query":"` + query + `","variables":{"id":"1"},"operationName":null}`
+
+			srv := mockServer(t, expectQuery, map[string]interface{}{
+				"data": map[string]interface{}{
+					"id":   "1",
+					"name": "bob",
+				},
+			})
+			instance := New(srv.URL)
+
 			var dest map[string]interface{}
 			got, err := instance.Send(context.Background(), &dest, tt.args.query, tt.args.variables)
 
 			if !tt.wantErr {
-				require.NoError(t, err)
+				require.Equal(t, nil, err)
 			}
 
 			if tt.wantErr && err == nil {
