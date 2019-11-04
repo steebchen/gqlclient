@@ -9,7 +9,15 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	srv := mockServer(t)
+	query := `query GetUser { user(id: $id) { id name } }`
+	expectQuery := `{"query":"` + query + `","variables":{"id":"1"},"operationName":null}`
+
+	srv := mockServer(t, expectQuery, map[string]interface{}{
+		"data": map[string]interface{}{
+			"id":   "1",
+			"name": "bob",
+		},
+	})
 
 	client := New(srv.URL)
 
@@ -18,18 +26,26 @@ func TestNew(t *testing.T) {
 		Name string
 	}
 
-	resp, err := client.Send(context.Background(), &data, `query GetUser { user(id: $id) { id name } }`, map[string]interface{}{
+	resp, err := client.Send(context.Background(), &data, query, map[string]interface{}{
 		"id": "1",
 	})
 
-	require.NoError(t, err)
+	require.Equal(t, nil, err)
 
 	require.Equal(t, []Error(nil), resp.Errors)
 	require.Equal(t, "bob", data.Name)
 }
 
 func TestClient_WithHTTPClient(t *testing.T) {
-	srv := mockServer(t)
+	query := `query GetUser { user(id: $id) { id name } }`
+	expectQuery := `{"query":"` + query + `","variables":{"id":"1"},"operationName":null}`
+
+	srv := mockServer(t, expectQuery, map[string]interface{}{
+		"data": map[string]interface{}{
+			"id":   "1",
+			"name": "bob",
+		},
+	})
 
 	client := New(srv.URL)
 
@@ -40,9 +56,9 @@ func TestClient_WithHTTPClient(t *testing.T) {
 		Name string
 	}
 
-	_, err := client.Send(context.Background(), &data, `query GetUser { user(id: $id) { id name } }`, map[string]interface{}{
+	_, err := client.Send(context.Background(), &data, query, map[string]interface{}{
 		"id": "1",
 	})
 
-	require.NoError(t, err)
+	require.Equal(t, nil, err)
 }
