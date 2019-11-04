@@ -1,9 +1,8 @@
-FROM steebchen/go-prisma:go_v1.13-prisma_v1.34.10 as builder
+FROM golang:1.13
 
-ENV GO111MODULE=on
+WORKDIR /app
 
 COPY go.mod go.sum ./
-
 RUN go mod download
 
 COPY . ./

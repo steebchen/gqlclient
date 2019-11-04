@@ -85,7 +85,8 @@ func TestClient_Send_context(t *testing.T) {
 
 	instance := New(mockServer(t).URL)
 
-	ctx, _ := context.WithDeadline(context.Background(), time.Now())
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now())
+	defer cancel()
 
 	_, err := instance.Raw(ctx, query, variables)
 
@@ -149,6 +150,7 @@ func TestClient_Send_Variations(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			instance := New(mockServer(t).URL)
 			var dest map[string]interface{}
