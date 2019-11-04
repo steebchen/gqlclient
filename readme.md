@@ -1,4 +1,4 @@
-# gqlclient [![GoDoc](https://godoc.org/github.com/steebchen/gqlclient?status.png)](http://godoc.org/github.com/steebchen/gqlclient) [![Go Report Card](https://goreportcard.com/badge/github.com/steebchen/gqlclient)](https://goreportcard.com/report/github.com/steebchen/gqlclient) [![Actions Status](https://wdp9fww0r9.execute-api.us-west-2.amazonaws.com/production/badge/steebchen/gqlclient)](https://wdp9fww0r9.execute-api.us-west-2.amazonaws.com/production/results/steebchen/gqlclient)
+# gqlclient [![GoDoc](https://godoc.org/github.com/steebchen/gqlclient?status.png)](http://godoc.org/github.com/steebchen/gqlclient) [![Go Report Card](https://goreportcard.com/badge/github.com/steebchen/gqlclient)](https://goreportcard.com/report/github.com/steebchen/gqlclient) [![Actions Status](https://github.com/steebchen/gqlclient/workflows/test%20all/badge.svg)](https://github.com/steebchen/gqlclient/actions)
 
 The package gqlclient provides a GraphQL client implementation.
 
